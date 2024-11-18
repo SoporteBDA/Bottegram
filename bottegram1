@@ -1,0 +1,55 @@
+import feedparser
+import requests
+import time
+
+# (Replace with your actual token)
+TELEGRAM_TOKEN = '8077939735:AAHDhtHwTyG9NSiSrmliuBVp1DdZ-ix1TVE'
+CHAT_ID = '8077939735'
+FEED_URL = 'https://2001online.com/feed'
+
+
+def parse_feed(feed_url):
+    """Parses the RSS feed and returns entries or None on error."""
+    try:
+        feed = feedparser.parse(feed_url)
+        return feed.entries
+    except Exception as e:
+        print(f"Error parsing feed: {e}")
+        return None
+
+
+def get_feed_entries(feed_url):
+    """Gets entries from the feed or returns None on error."""
+    entries = parse_feed(feed_url)
+    if entries:
+        return entries
+    else:
+        print(f"Failed to retrieve entries from {feed_url}")
+        return None
+
+
+def send_telegram_message(title, url):
+    """Sends a Telegram message with the provided title and URL."""
+    message = f"{title}\n{url}"
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={message}'
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Sent message to Telegram: {title}")
+        else:
+            print(f"Error sending message: {response.status_code}")
+    except Exception as e:
+        print(f"Error sending Telegram message: {e}")
+
+
+def main():
+    while True:
+        entries = get_feed_entries(FEED_URL)
+
+        if entries:
+            for entry in entries:
+                title = entry.title
+                url = entry.link
+                send_telegram_message(title, url)
+
+        time.sleep(300)
